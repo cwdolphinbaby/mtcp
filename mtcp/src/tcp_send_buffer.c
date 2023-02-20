@@ -5,8 +5,8 @@
 #include "tcp_send_buffer.h"
 #include "tcp_sb_queue.h"
 
-#define MAX(a, b) ((a)>(b)?(a):(b))
-#define MIN(a, b) ((a)<(b)?(a):(b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
 
 /*----------------------------------------------------------------------------*/
 struct sb_manager
@@ -19,17 +19,18 @@ struct sb_manager
 
 } sb_manager;
 /*----------------------------------------------------------------------------*/
-uint32_t 
+uint32_t
 SBGetCurnum(sb_manager_t sbm)
 {
 	return sbm->cur_num;
 }
 /*----------------------------------------------------------------------------*/
-sb_manager_t 
+sb_manager_t
 SBManagerCreate(mtcp_manager_t mtcp, size_t chunk_size, uint32_t cnum)
 {
 	sb_manager_t sbm = (sb_manager_t)calloc(1, sizeof(sb_manager));
-	if (!sbm) {
+	if (!sbm)
+	{
 		TRACE_ERROR("SBManagerCreate() failed. %s\n", strerror(errno));
 		return NULL;
 	}
@@ -39,18 +40,20 @@ SBManagerCreate(mtcp_manager_t mtcp, size_t chunk_size, uint32_t cnum)
 #if !defined(DISABLE_DPDK) && !defined(ENABLE_ONVM)
 	char pool_name[RTE_MEMPOOL_NAMESIZE];
 	sprintf(pool_name, "sbm_pool_%d", mtcp->ctx->cpu);
-	sbm->mp = (mem_pool_t)MPCreate(pool_name, chunk_size, (uint64_t)chunk_size * cnum);	
+	sbm->mp = (mem_pool_t)MPCreate(pool_name, chunk_size, (uint64_t)chunk_size * cnum);
 #else
 	sbm->mp = (mem_pool_t)MPCreate(chunk_size, (uint64_t)chunk_size * cnum);
 #endif
-	if (!sbm->mp) {
+	if (!sbm->mp)
+	{
 		TRACE_ERROR("Failed to create mem pool for sb.\n");
 		free(sbm);
 		return NULL;
 	}
 
 	sbm->freeq = CreateSBQueue(cnum);
-	if (!sbm->freeq) {
+	if (!sbm->freeq)
+	{
 		TRACE_ERROR("Failed to create free buffer queue.\n");
 		MPDestroy(sbm->mp);
 		free(sbm);
@@ -67,14 +70,17 @@ SBInit(sb_manager_t sbm, uint32_t init_seq)
 
 	/* first try dequeue from free buffer queue */
 	buf = SBDequeue(sbm->freeq);
-	if (!buf) {
+	if (!buf)
+	{
 		buf = (struct tcp_send_buffer *)malloc(sizeof(struct tcp_send_buffer));
-		if (!buf) {
+		if (!buf)
+		{
 			perror("malloc() for buf");
 			return NULL;
 		}
 		buf->data = MPAllocateChunk(sbm->mp);
-		if (!buf->data) {
+		if (!buf->data)
+		{
 			TRACE_ERROR("Failed to fetch memory chunk for data.\n");
 			free(buf);
 			return NULL;
@@ -89,7 +95,7 @@ SBInit(sb_manager_t sbm, uint32_t init_seq)
 	buf->size = sbm->chunk_size;
 
 	buf->init_seq = buf->head_seq = init_seq;
-	
+
 	return buf;
 }
 /*----------------------------------------------------------------------------*/
@@ -110,8 +116,7 @@ SBFreeInternal(sb_manager_t sbm, struct tcp_send_buffer *buf)
 }
 #endif
 /*----------------------------------------------------------------------------*/
-void 
-SBFree(sb_manager_t sbm, struct tcp_send_buffer *buf)
+void SBFree(sb_manager_t sbm, struct tcp_send_buffer *buf)
 {
 	if (!buf)
 		return;
@@ -119,7 +124,7 @@ SBFree(sb_manager_t sbm, struct tcp_send_buffer *buf)
 	SBEnqueue(sbm->freeq, buf);
 }
 /*----------------------------------------------------------------------------*/
-size_t 
+size_t
 SBPut(sb_manager_t sbm, struct tcp_send_buffer *buf, const void *data, size_t len)
 {
 	size_t to_put;
@@ -129,15 +134,19 @@ SBPut(sb_manager_t sbm, struct tcp_send_buffer *buf, const void *data, size_t le
 
 	/* if no space, return -2 */
 	to_put = MIN(len, buf->size - buf->len);
-	if (to_put <= 0) {
+	if (to_put <= 0)
+	{
 		return -2;
 	}
 
-	if (buf->tail_off + to_put < buf->size) {
+	if (buf->tail_off + to_put < buf->size)
+	{
 		/* if the data fit into the buffer, copy it */
 		memcpy(buf->data + buf->tail_off, data, to_put);
 		buf->tail_off += to_put;
-	} else {
+	}
+	else
+	{
 		/* if buffer overflows, move the existing payload and merge */
 		memmove(buf->data, buf->head, buf->len);
 		buf->head = buf->data;
@@ -151,16 +160,27 @@ SBPut(sb_manager_t sbm, struct tcp_send_buffer *buf, const void *data, size_t le
 	return to_put;
 }
 /*----------------------------------------------------------------------------*/
-size_t 
+size_t
 SBRemove(sb_manager_t sbm, struct tcp_send_buffer *buf, size_t len)
 {
+	printf("================================\n");
+	printf("INSIDE SBRemove!!!\n");
+	// printf("buff->head_offset = %d\n", buff->head_offset);
+	// printf("buff->head = %hhn\n", buff->head);
+	// printf("buff->head_seq = %d\n", buff->head_seq);
+	// printf("buff->merged_len = %d\n", buff->merged_len);
+	// printf("buff->last_len = %d\n", buff->last_len);
+	// printf("INSIDE RBRemove!!!\n");
+	printf("================================\n");
+
 	size_t to_remove;
 
 	if (len <= 0)
 		return 0;
 
 	to_remove = MIN(len, buf->len);
-	if (to_remove <= 0) {
+	if (to_remove <= 0)
+	{
 		return -2;
 	}
 
@@ -170,7 +190,8 @@ SBRemove(sb_manager_t sbm, struct tcp_send_buffer *buf, size_t len)
 	buf->len -= to_remove;
 
 	/* if buffer is empty, move the head to 0 */
-	if (buf->len == 0 && buf->head_off > 0) {
+	if (buf->len == 0 && buf->head_off > 0)
+	{
 		buf->head = buf->data;
 		buf->head_off = buf->tail_off = 0;
 	}
