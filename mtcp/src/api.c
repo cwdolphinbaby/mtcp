@@ -702,6 +702,8 @@ mtcp_connect(mctx_t mctx, int sockid,
 	int is_dyn_bound = FALSE;
 	int ret, nif;
 
+	// DEBUG("INSIDE mtcp_connect!!!");
+
 	mtcp = GetMTCPManager(mctx);
 	if (!mtcp) {
 		return -1;
@@ -1166,30 +1168,39 @@ mtcp_recv(mctx_t mctx, int sockid, char *buf, size_t len, int flags)
 	
 	mtcp = GetMTCPManager(mctx);
         if (!mtcp) {
-		return -1;
+		return -10;
 	}
 	
 	if (sockid < 0 || sockid >= CONFIG.max_concurrency) {
 		TRACE_API("Socket id %d out of range.\n", sockid);
 		errno = EBADF;
-		return -1;
+		return -2;
 	}
 	
 	socket = &mtcp->smap[sockid];
-        if (socket->socktype == MTCP_SOCK_UNUSED) {
+	// printf("socket->socktype = %d\n", socket->socktype);
+  // printf("MTCP_SOCK_UNUSED = %d\n", MTCP_SOCK_UNUSED);
+	// printf("MTCP_SOCK_STREAM = %d\n", MTCP_SOCK_STREAM);
+	// printf("MTCP_SOCK_PROXY = %d\n", MTCP_SOCK_PROXY);
+	// printf("MTCP_SOCK_LISTENER = %d\n", MTCP_SOCK_LISTENER);
+	// printf("MTCP_SOCK_EPOLL = %d\n", MTCP_SOCK_EPOLL);
+	// printf("MTCP_SOCK_PIPE = %d\n", MTCP_SOCK_PIPE);
+
+	if (socket->socktype == MTCP_SOCK_UNUSED) {
 		TRACE_API("Invalid socket id: %d\n", sockid);
 		errno = EBADF;
-		return -1;
+		return -3;
 	}
 	
 	if (socket->socktype == MTCP_SOCK_PIPE) {
+		printf("PIPEREAD!!!");
 		return PipeRead(mctx, sockid, buf, len);
 	}
 	
 	if (socket->socktype != MTCP_SOCK_STREAM) {
 		TRACE_API("Not an end socket. id: %d\n", sockid);
 		errno = ENOTSOCK;
-		return -1;
+		return -4;
 	}
 	
 	/* stream should be in ESTABLISHED, FIN_WAIT_1, FIN_WAIT_2, CLOSE_WAIT */
@@ -1198,7 +1209,7 @@ mtcp_recv(mctx_t mctx, int sockid, char *buf, size_t len, int flags)
 	    !(cur_stream->state >= TCP_ST_ESTABLISHED && 
 	      cur_stream->state <= TCP_ST_CLOSE_WAIT)) {
 		errno = ENOTCONN;
-		return -1;
+		return -5;
 	}
 
 	rcvvar = cur_stream->rcvvar;
@@ -1214,9 +1225,11 @@ mtcp_recv(mctx_t mctx, int sockid, char *buf, size_t len, int flags)
 	
 	/* return EAGAIN if no receive buffer */
 	if (socket->opts & MTCP_NONBLOCK) {
+		printf("rcvvar->rcvbuf->merged_len = %d\n", rcvvar->rcvbuf->merged_len);
+
 		if (!rcvvar->rcvbuf || rcvvar->rcvbuf->merged_len == 0) {
 			errno = EAGAIN;
-			return -1;
+			return -6;
 		}
 	}
 	
@@ -1227,7 +1240,7 @@ mtcp_recv(mctx_t mctx, int sockid, char *buf, size_t len, int flags)
 			if (!cur_stream || cur_stream->state != TCP_ST_ESTABLISHED) {
 				SBUF_UNLOCK(&rcvvar->read_lock);
 				errno = EINTR;
-				return -1;
+				return -7;
 			}
 			pthread_cond_wait(&rcvvar->read_cond, &rcvvar->read_lock);
 		}
@@ -1236,14 +1249,17 @@ mtcp_recv(mctx_t mctx, int sockid, char *buf, size_t len, int flags)
 
 	switch (flags) {
 	case 0:
+		// cur_stream->rcvvar->rcvbuf->merged_len -= len;
+		// printf("MERGED_LEN before calling CopyToUser = %d\n", cur_stream->rcvvar->rcvbuf->merged_len);
 		ret = CopyToUser(mtcp, cur_stream, buf, len);
+		// printf("MERGED_LEN after calling CopyToUser = %d\n", cur_stream->rcvvar->rcvbuf->merged_len);
 		break;
 	case MSG_PEEK:
 		ret = PeekForUser(mtcp, cur_stream, buf, len);
 		break;
 	default:
 		SBUF_UNLOCK(&rcvvar->read_lock);
-		ret = -1;
+		ret = -8;
 		errno = EINVAL;
 		return ret;
 	}
@@ -1287,7 +1303,16 @@ mtcp_recv(mctx_t mctx, int sockid, char *buf, size_t len, int flags)
 inline ssize_t
 mtcp_read(mctx_t mctx, int sockid, char *buf, size_t len)
 {
-	return mtcp_recv(mctx, sockid, buf, len, 0);
+	// mtcp_manager_t mtcp = GetMTCPManager(mctx);
+	// socket_map_t socket;
+	// tcp_stream *stream;
+
+	// socket = &mtcp->smap[sockid];
+	// stream = socket->stream;
+
+	int rd = mtcp_recv(mctx, sockid, buf, len, 0);
+	// RBFree(mtcp->rbm_rcv, stream->rcvvar->rcvbuf);
+	return rd;
 }
 /*----------------------------------------------------------------------------*/
 int

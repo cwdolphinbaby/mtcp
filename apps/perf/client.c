@@ -24,7 +24,7 @@
 #include "http_parsing.h"
 #include "debug.h"
 
-#define MAX_CPUS 		16
+#define MAX_CPUS 		32
 
 #define MAX_URL_LEN 		128
 #define MAX_FILE_LEN 		128
@@ -50,7 +50,7 @@
 #endif
 
 #define CONCURRENCY		1
-#define BUF_LEN 		8192
+#define BUF_LEN 		128
 #define MAX_FLOW_NUM 		(10000)
 #define MAX_EVENTS 		(30000)
 
@@ -108,11 +108,10 @@ main(int argc, char **argv)
 	int sec_to_send;
 	int wrote        = 0,
 		read         = 0,
-		bytes_sent   = 0,
 		events_ready = 0,
 		nevents      = 0,
 		sent_close   = 0;
-
+	uint64_t bytes_sent   = 0;
 	// time
 	double elapsed_time = 0.0;
 	struct timeval t1, t2;
@@ -172,7 +171,7 @@ main(int argc, char **argv)
 
 	// This must be done before mtcp_init
 	mtcp_getconf(&mcfg);
-	mcfg.num_cores = 1;
+	mcfg.num_cores = 2;
 	mtcp_setconf(&mcfg);
 	// Seed RNG
 	srand(time(NULL));
@@ -194,7 +193,11 @@ main(int argc, char **argv)
 	mtcp_register_signal(SIGINT, SignalHandler);
 
 	DEBUG("Creating thread context...");
+
+	// SetUpCores (RunWgetMain) - START
 	mtcp_core_affinitize(core);
+
+	// CreateContext - START (called by SetUpCores)
 	ctx = (struct thread_context *) calloc(1, sizeof(struct thread_context));
 	if (!ctx) {
 		ERROR("Failed to create context.");
@@ -203,6 +206,7 @@ main(int argc, char **argv)
 	}
 	ctx->core = core;
 	ctx->mctx = mtcp_create_context(core);
+	// CreateContext - END (called by SetUpCores)
 	if (!ctx->mctx) {
 		ERROR("Failed to create mtcp context.");
 		return -1;
@@ -223,7 +227,7 @@ main(int argc, char **argv)
 		return -1;
 	}
 
-
+	// CreateConnection - START
 	DEBUG("Creating socket...");
 	sockfd = mtcp_socket(mctx, AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0) {
@@ -240,6 +244,8 @@ main(int argc, char **argv)
 	ev.events = MTCP_EPOLLIN;
 	ev.data.sockid = sockfd;
 	mtcp_epoll_ctl(mctx, ep_id, MTCP_EPOLL_CTL_ADD, sockfd, &ev);
+
+	// CreateConnection - END
 
 	if (mode == WAIT_MODE) {
 		ret = mtcp_bind(mctx, sockfd, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
@@ -298,7 +304,7 @@ end_wait_loop:
 				return -1;
 			}
 		}
-		DEBUG("Connection created.");
+		DEBUG("Connection created!");
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &ts_start);
@@ -309,9 +315,11 @@ end_wait_loop:
 
 	while (1) {
 		wrote = mtcp_write(ctx->mctx, sockfd, buf, BUF_LEN);
-		bytes_sent += wrote;
 		if (wrote > 0) {
+			bytes_sent += wrote;
+			printf("wrote IN LINE 313 = %d\n", wrote);
 			gettimeofday(&t1, NULL);
+			printf("BYTES_SENT IN LINE 314 = %ld\n", bytes_sent);
 			break;
 		}
 	}
@@ -321,17 +329,37 @@ end_wait_loop:
 	//
 
     
-	while (1) { // check time
+	// while (1) { // check time
+	int count = 0;
+	int num_iter = 1000000; // 100000;
+	// int pause_time_interval = 0; // pause for 1 second between each iteration
+	// double pause_time_sec = 0;
+	// double pause_time_nsec = 0;
+	// struct timespec paused_time_start, paused_time_end;
+	uint64_t total_bytes_sent = 0;
+	while (count < num_iter) {
+		count += 1;
+		total_bytes_sent += bytes_sent;
 		events_ready = mtcp_epoll_wait(ctx->mctx, ep_id, events, mcfg.max_num_buffers, -1);
+		// printf("BYTES_SENT IN LINE 329 = %ld\n", bytes_sent);
 		for (int i = 0; i < events_ready; i++) {
 			assert(sockfd == events[i].data.sockid);
 			if (events[i].events & MTCP_EPOLLIN) {
+				// printf("BYTES_SENT IN LINE 333 = %ld\n", bytes_sent);
 				read = mtcp_read(ctx->mctx, sockfd, rcvbuf, BUF_LEN);
+				printf("READ = %d\n", read);
 				if (read <= 0) {
 					continue;
 				} else {
-					DEBUG("Got FIN-ACK from receiver (%d bytes): %s", read, rcvbuf);
-					goto stop_timer; 
+					// DEBUG("Got FIN-ACK from receiver (%d bytes): %s", read, rcvbuf);
+					// goto stop_timer; 
+					// gettimeofday(&t2, NULL);
+					// printf("\n\n");
+					// elapsed_time = (t2.tv_sec - t1.tv_sec) * 1.0;
+					// elapsed_time += (t2.tv_usec - t1.tv_usec) / 1000000.0;
+					// printf("Time elapsed: %f\n", elapsed_time);
+					// printf("Total bytes sent: %ld\n", bytes_sent);
+					// printf("Throughput: %.3fMbit/sec\n", ((bytes_sent * 8.0 / 1000000.0) / elapsed_time));
 				}
 			} else if (events[i].events == MTCP_EPOLLOUT) {
 				//if (bytes_sent < sec_to_send) {
@@ -348,8 +376,19 @@ end_wait_loop:
 				}
 			}
 		}
-	}
+		
+		// clock_gettime(CLOCK_REALTIME, &paused_time_start);
+		// sleep(pause_time_interval);
+		// clock_gettime(CLOCK_REALTIME, &paused_time_end);
 
+		// printf("Execution sec %ld\n", (long)paused_time_end.tv_sec - (long)paused_time_start.tv_sec);
+		// printf("Execution nsec %ld\n", ((long)paused_time_end.tv_nsec - (long)paused_time_start.tv_nsec));
+		// pause_time_sec += (long)paused_time_end.tv_sec - (long)paused_time_start.tv_sec;
+		// pause_time_nsec += (long)paused_time_end.tv_nsec - (long)paused_time_start.tv_nsec;
+		// printf("pause_time_sec: %f\n", pause_time_sec);
+		// printf("pause_time_nsec: %f\n", pause_time_nsec);
+	}
+goto stop_timer;
 
 stop_timer:
 	gettimeofday(&t2, NULL);
@@ -359,11 +398,15 @@ stop_timer:
 	DEBUG("Socket closed.");
 
 	printf("\n\n");
+	// printf("pause_time_sec: %f\n", pause_time_sec);
+	// printf("pause_time_nsec: %f\n", pause_time_nsec);
 	elapsed_time = (t2.tv_sec - t1.tv_sec) * 1.0;
 	elapsed_time += (t2.tv_usec - t1.tv_usec) / 1000000.0;
+	// printf("TOTAL Time elapsed: %f\n", elapsed_time);
+	// elapsed_time -= (pause_time_sec + pause_time_nsec / 1000000000);
 	printf("Time elapsed: %f\n", elapsed_time);
-	printf("Total bytes sent: %d\n", bytes_sent);
-	printf("Throughput: %.3fMbit/sec\n", ((bytes_sent * 8.0 / 1000000.0) / elapsed_time));
+	printf("Total bytes sent: %ld\n", total_bytes_sent);
+	printf("Throughput: %.3fMbit/sec\n", ((total_bytes_sent * 8.0 / 1000000.0) / elapsed_time));
 
 	mtcp_destroy_context(ctx->mctx);
 	free(ctx);

@@ -563,7 +563,7 @@ RunWgetMain(void *arg)
 
 	mtcp_init_rss(mctx, saddr, IP_RANGE, daddr, dport);
 
-	n = flows[core];
+	n = flows[core]; // flow per thread
 	if (n == 0) {
 		TRACE_DBG("Application thread %d finished.\n", core);
 		pthread_exit(NULL);
@@ -736,7 +736,7 @@ main(int argc, char **argv)
 	dport = htons(80);
 	saddr = INADDR_ANY;
 
-	total_flows = mystrtol(argv[2], 10);
+	total_flows = mystrtol(argv[2], 10); // 10000000
 	if (total_flows <= 0) {
 		TRACE_CONFIG("Number of flows should be large than 0.\n");
 		return FALSE;
