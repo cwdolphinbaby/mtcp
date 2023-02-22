@@ -646,8 +646,8 @@ ProcessTCPPayload(mtcp_manager_t mtcp, tcp_stream *cur_stream,
 	   meaning that the connection is already closed by the application */
 	if (cur_stream->state == TCP_ST_FIN_WAIT_1 || 
 			cur_stream->state == TCP_ST_FIN_WAIT_2) {
-		RBRemove(mtcp->rbm_rcv, 
-				rcvvar->rcvbuf, rcvvar->rcvbuf->merged_len, AT_MTCP);
+		// RBRemove(mtcp->rbm_rcv, 
+		// 		rcvvar->rcvbuf, rcvvar->rcvbuf->merged_len, AT_MTCP);
 	}
 	cur_stream->rcv_nxt = rcvvar->rcvbuf->head_seq + rcvvar->rcvbuf->merged_len;
 	rcvvar->rcv_wnd = rcvvar->rcvbuf->size - rcvvar->rcvbuf->merged_len;
