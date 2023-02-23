@@ -382,7 +382,7 @@ SetNetEnv(char *dev_name_list, char *port_stat_list)
 			    !set_all_inf &&
 			    (seek=strstr(dev_name_list, iter_if->ifa_name)) != NULL &&
 			    /* check if the interface was not aliased */
-			    *(seek + strlen(iter_if->ifa_name)) != ':') {
+			    *(seek + strlen(iter_if->ifa_name)) == ':') {
 				struct ifreq ifr;
 
 				/* Setting informations */
