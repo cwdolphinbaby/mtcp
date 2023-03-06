@@ -267,6 +267,7 @@ SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream,
 
 	if (flags & TCP_FLAG_WACK) {
 		tcph->seq = htonl(cur_stream->snd_nxt - 1);
+		printf("tcph->seq = %u in SendTCPPacket (1)\n", cur_stream->snd_nxt - 1);
 		TRACE_CLWND("%u Sending ACK to get new window advertisement. "
 				"seq: %u, peer_wnd: %u, snd_nxt - snd_una: %u\n", 
 				cur_stream->id,
@@ -280,16 +281,20 @@ SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream,
 					cur_stream->id, cur_stream->closed);
 		}
 		tcph->seq = htonl(cur_stream->sndvar->fss);
+		printf("tcph->seq = %u in SendTCPPacket (2)\n", cur_stream->sndvar->fss);
 		cur_stream->sndvar->is_fin_sent = TRUE;
 		TRACE_FIN("Stream %d: Sending FIN. seq: %u, ack_seq: %u\n", 
 				cur_stream->id, cur_stream->snd_nxt, cur_stream->rcv_nxt);
 	} else {
 		tcph->seq = htonl(cur_stream->snd_nxt);
+		printf("tcph->seq = %u in SendTCPPacket (3)\n", cur_stream->snd_nxt);
 	}
 
+	printf("flags & TCP_FLAG_ACK = %d in SendTCPPacket\n", flags & TCP_FLAG_ACK);
 	if (flags & TCP_FLAG_ACK) {
 		tcph->ack = TRUE;
 		tcph->ack_seq = htonl(cur_stream->rcv_nxt);
+		printf("tcph->ack_seq = %u in SendTCPPacket\n", cur_stream->rcv_nxt);
 		cur_stream->sndvar->ts_lastack_sent = cur_ts;
 		cur_stream->last_active_ts = cur_ts;
 		UpdateTimeoutList(mtcp, cur_stream);
@@ -332,7 +337,10 @@ SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream,
 					      cur_stream->saddr, cur_stream->daddr);
 #endif
 	
+	printf("payloadlen = %u\n", payloadlen);
+	printf("before update: snd_nxt = %u\n", cur_stream->snd_nxt);
 	cur_stream->snd_nxt += payloadlen;
+	printf("after update: snd_nxt = %u\n", cur_stream->snd_nxt);
 
 	if (tcph->syn || tcph->fin) {
 		cur_stream->snd_nxt++;
@@ -588,6 +596,7 @@ FlushTCPSendingBuffer(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_
                     goto out;
                 }
 #endif
+		printf("Calling SendTCPPacket from FlushTCPSendingBuffer in tcp_out!!\n");
 		if ((sndlen = SendTCPPacket(mtcp, cur_stream, cur_ts,
 					    TCP_FLAG_ACK, data, pkt_len)) < 0) {
 			/* there is no available tx buf */
@@ -616,20 +625,24 @@ SendControlPacket(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 
 	if (cur_stream->state == TCP_ST_SYN_SENT) {
 		/* Send SYN here */
+		printf("Calling SendTCPPacket from SendControlPacket in tcp_out (1)!\n");
 		ret = SendTCPPacket(mtcp, cur_stream, cur_ts, TCP_FLAG_SYN, NULL, 0);
 
 	} else if (cur_stream->state == TCP_ST_SYN_RCVD) {
 		/* Send SYN/ACK here */
 		cur_stream->snd_nxt = sndvar->iss;
+		printf("Calling SendTCPPacket from SendControlPacket in tcp_out (2)!\n");
 		ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
 				TCP_FLAG_SYN | TCP_FLAG_ACK, NULL, 0);
 
 	} else if (cur_stream->state == TCP_ST_ESTABLISHED) {
 		/* Send ACK here */
+		printf("Calling SendTCPPacket from SendControlPacket in tcp_out (3)!\n");
 		ret = SendTCPPacket(mtcp, cur_stream, cur_ts, TCP_FLAG_ACK, NULL, 0);
 
 	} else if (cur_stream->state == TCP_ST_CLOSE_WAIT) {
 		/* Send ACK for the FIN here */
+		printf("Calling SendTCPPacket from SendControlPacket in tcp_out (4)!\n");
 		ret = SendTCPPacket(mtcp, cur_stream, cur_ts, TCP_FLAG_ACK, NULL, 0);
 
 	} else if (cur_stream->state == TCP_ST_LAST_ACK) {
@@ -638,6 +651,7 @@ SendControlPacket(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 			ret = -1;
 		} else {
 			/* Send FIN/ACK here */
+			printf("Calling SendTCPPacket from SendControlPacket in tcp_out (5)!\n");
 			ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
 					TCP_FLAG_FIN | TCP_FLAG_ACK, NULL, 0);
 		}
@@ -647,32 +661,38 @@ SendControlPacket(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 			ret = -1;
 		} else {
 			/* Send FIN/ACK here */
+			printf("Calling SendTCPPacket from SendControlPacket in tcp_out (6)!\n");
 			ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
 					TCP_FLAG_FIN | TCP_FLAG_ACK, NULL, 0);
 		}
 
 	} else if (cur_stream->state == TCP_ST_FIN_WAIT_2) {
 		/* Send ACK here */
+		printf("Calling SendTCPPacket from SendControlPacket in tcp_out (7)!\n");
 		ret = SendTCPPacket(mtcp, cur_stream, cur_ts, TCP_FLAG_ACK, NULL, 0);
 
 	} else if (cur_stream->state == TCP_ST_CLOSING) {
 		if (sndvar->is_fin_sent) {
 			/* if the sequence is for FIN, send FIN */
 			if (cur_stream->snd_nxt == sndvar->fss) {
+				printf("Calling SendTCPPacket from SendControlPacket in tcp_out (8)!\n");
 				ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
 						TCP_FLAG_FIN | TCP_FLAG_ACK, NULL, 0);
 			} else {
+				printf("Calling SendTCPPacket from SendControlPacket in tcp_out (9)!\n");
 				ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
 						TCP_FLAG_ACK, NULL, 0);
 			}
 		} else {
 			/* if FIN is not sent, send fin with ack */
+			printf("Calling SendTCPPacket from SendControlPacket in tcp_out (10)!\n");
 			ret = SendTCPPacket(mtcp, cur_stream, cur_ts, 
 					TCP_FLAG_FIN | TCP_FLAG_ACK, NULL, 0);
 		}
 
 	} else if (cur_stream->state == TCP_ST_TIME_WAIT) {
 		/* Send ACK here */
+		printf("Calling SendTCPPacket from SendControlPacket in tcp_out (11)!\n");
 		ret = SendTCPPacket(mtcp, cur_stream, cur_ts, TCP_FLAG_ACK, NULL, 0);
 
 	} else if (cur_stream->state == TCP_ST_CLOSED) {
@@ -683,6 +703,7 @@ SendControlPacket(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts)
 		if (sndvar->on_send_list || sndvar->on_ack_list) {
 			ret = -1;
 		} else {
+			printf("Calling SendTCPPacket from SendControlPacket in tcp_out (12)!\n");
 			ret = SendTCPPacket(mtcp, cur_stream, cur_ts, TCP_FLAG_RST, NULL, 0);
 			if (ret >= 0) {
 				DestroyTCPStream(mtcp, cur_stream);
@@ -893,18 +914,21 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 			if (to_ack) {
 				/* send the queued ack packets */
 				while (cur_stream->sndvar->ack_cnt > 0) {
+					printf("Calling SendTCPPacket from WriteTCPACKList in tcp_out (1)!\n");
 					ret = SendTCPPacket(mtcp, cur_stream, 
 							cur_ts, TCP_FLAG_ACK, NULL, 0);
 					if (ret < 0) {
 						/* since there is no available write buffer, break */
 						break;
 					}
+					printf("Updating cur_stream->sndvar->ack_cnt--\n");
 					cur_stream->sndvar->ack_cnt--;
 				}
 
 				/* if is_wack is set, send packet to get window advertisement */
 				if (cur_stream->sndvar->is_wack) {
 					cur_stream->sndvar->is_wack = FALSE;
+					printf("Calling SendTCPPacket from WriteTCPACKList in tcp_out (2)!\n");
 					ret = SendTCPPacket(mtcp, cur_stream, 
 							cur_ts, TCP_FLAG_ACK | TCP_FLAG_WACK, NULL, 0);
 					if (ret < 0) {
@@ -916,6 +940,7 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 				if (!(cur_stream->sndvar->ack_cnt || cur_stream->sndvar->is_wack)) {
 					cur_stream->sndvar->on_ack_list = FALSE;
 					TAILQ_REMOVE(&sender->ack_list, cur_stream, sndvar->ack_link);
+					printf("Updating sender->ack_list_cnt-- (1)\n");
 					sender->ack_list_cnt--;
 				}
 			} else {
@@ -923,6 +948,7 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 				cur_stream->sndvar->ack_cnt = 0;
 				cur_stream->sndvar->is_wack = 0;
 				TAILQ_REMOVE(&sender->ack_list, cur_stream, sndvar->ack_link);
+				printf("Updating sender->ack_list_cnt-- (2)\n");
 				sender->ack_list_cnt--;
 			}
 
@@ -935,6 +961,7 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 		} else {
 			TRACE_ERROR("Stream %d: not on ack list.\n", cur_stream->id);
 			TAILQ_REMOVE(&sender->ack_list, cur_stream, sndvar->ack_link);
+			printf("Updating sender->ack_list_cnt-- (3)\n");
 			sender->ack_list_cnt--;
 #ifdef DUMP_STREAM
 			thread_printf(mtcp, mtcp->log_fp, 
@@ -1070,6 +1097,7 @@ RemoveFromACKList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 	if (cur_stream->sndvar->on_ack_list) {
 		cur_stream->sndvar->on_ack_list = FALSE;
 		TAILQ_REMOVE(&sender->ack_list, cur_stream, sndvar->ack_link);
+		printf("Updating sender->ack_list_cnt-- from RemoveFromACKList\n");
 		sender->ack_list_cnt--;
 	}
 }

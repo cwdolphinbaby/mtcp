@@ -311,6 +311,7 @@ ProcessACK(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts,
 		struct tcphdr *tcph, uint32_t seq, uint32_t ack_seq, 
 		uint16_t window, int payloadlen)
 {
+	printf("CURRENTLY INSIDE ProcessACK!\n");
 	struct tcp_send_vars *sndvar = cur_stream->sndvar;
 	uint32_t cwindow, cwindow_prev;
 	uint32_t rmlen;
@@ -324,7 +325,7 @@ ProcessACK(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts,
 		cwindow = cwindow << sndvar->wscale_peer;
 	}
 	right_wnd_edge = sndvar->peer_wnd + cur_stream->rcvvar->snd_wl2;
-
+	printf("cur_stream->state = %d\n", cur_stream->state);
 	/* If ack overs the sending buffer, return */
 	if (cur_stream->state == TCP_ST_FIN_WAIT_1 || 
 			cur_stream->state == TCP_ST_FIN_WAIT_2 ||
@@ -332,11 +333,20 @@ ProcessACK(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts,
 			cur_stream->state == TCP_ST_CLOSE_WAIT || 
 			cur_stream->state == TCP_ST_LAST_ACK) {
 		if (sndvar->is_fin_sent && ack_seq == sndvar->fss + 1) {
+			printf("Updating ack_seq-- in ProcessACK\n");
 			ack_seq--;
 		}
 	}
+
+	printf("ack_seq = %d\n", ack_seq);
+	printf("sndvar->sndbuf->head_seq = %d\n", sndvar->sndbuf->head_seq);
+	printf("sndvar->sndbuf->len = %d\n", sndvar->sndbuf->len);
+	printf("sndvar->sndbuf->head_seq + sndvar->sndbuf->len = %d\n", sndvar->sndbuf->head_seq + sndvar->sndbuf->len);
+	printf("difference between values = %d\n", ack_seq - sndvar->sndbuf->head_seq + sndvar->sndbuf->len);
 	
 	if (TCP_SEQ_GT(ack_seq, sndvar->sndbuf->head_seq + sndvar->sndbuf->len)) {
+		printf("Invalid acknowledgement in ProcessACK\n");
+		
 		TRACE_DBG("Stream %d (%s): invalid acknologement. "
 				"ack_seq: %u, possible max_ack_seq: %u\n", cur_stream->id, 
 				TCPStateToString(cur_stream), ack_seq, 
@@ -350,6 +360,7 @@ ProcessACK(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts,
 			TCP_SEQ_LT(cur_stream->rcvvar->snd_wl2, ack_seq)) ||
 			(cur_stream->rcvvar->snd_wl2 == ack_seq && 
 			cwindow > sndvar->peer_wnd)) {
+		printf("Updating window in ProcessACK\n");
 		cwindow_prev = sndvar->peer_wnd;
 		sndvar->peer_wnd = cwindow;
 		cur_stream->rcvvar->snd_wl1 = seq;
@@ -362,6 +373,11 @@ ProcessACK(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts,
 		if (cwindow_prev < cur_stream->snd_nxt - sndvar->snd_una && 
 				sndvar->peer_wnd >= cur_stream->snd_nxt - sndvar->snd_una) {
 			TRACE_CLWND("%u Broadcasting client window update! "
+					"ack_seq: %u, peer_wnd: %u (before: %u), "
+					"(snd_nxt - snd_una: %u)\n", 
+					cur_stream->id, ack_seq, sndvar->peer_wnd, cwindow_prev, 
+					cur_stream->snd_nxt - sndvar->snd_una);
+			printf("%u Broadcasting client window update! "
 					"ack_seq: %u, peer_wnd: %u (before: %u), "
 					"(snd_nxt - snd_una: %u)\n", 
 					cur_stream->id, ack_seq, sndvar->peer_wnd, cwindow_prev, 
@@ -1205,6 +1221,7 @@ int
 ProcessTCPPacket(mtcp_manager_t mtcp, 
 		 uint32_t cur_ts, const int ifidx, const struct iphdr *iph, int ip_len)
 {
+	printf("CURRENTLY INSIDE ProcessTCPPacket!\n");
 	struct tcphdr* tcph = (struct tcphdr *) ((u_char *)iph + (iph->ihl << 2));
 	uint8_t *payload    = (uint8_t *)tcph + (tcph->doff << 2);
 	int payloadlen = ip_len - (payload - (u_char *)iph);

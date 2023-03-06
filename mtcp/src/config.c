@@ -138,7 +138,7 @@ EnrollRouteTableEntry(char *optstr)
 		for (i = 0; i < num_devices; i++) {
 			if (strcmp(dev, devices[i].name) != 0)
 				continue;
-			
+			printf("ifidx in DISABLE_PSIO = ifidx", ifidx);
 			ifidx = devices[i].ifindex;
 			break;
 		}
@@ -153,6 +153,7 @@ EnrollRouteTableEntry(char *optstr)
 		for (i = 0; i < num_devices; i++) {
 			if (strcmp(CONFIG.eths[i].dev_name, dev))
 				continue;
+			printf("ifidx in DISABLE_DPDK = %d", ifidx);
 			ifidx = CONFIG.eths[i].ifindex;
 			break;
 		}
@@ -176,6 +177,7 @@ EnrollRouteTableEntry(char *optstr)
 	CONFIG.rtable[ridx].mask = MaskFromPrefix(CONFIG.rtable[ridx].prefix);
 	CONFIG.rtable[ridx].masked = 
 			CONFIG.rtable[ridx].daddr & CONFIG.rtable[ridx].mask;
+	printf("EnrollRouteTableEntry: CONFIG.rtable[ridx].nif = %d", ifidx);
 	CONFIG.rtable[ridx].nif = ifidx;
 
 	if (CONFIG.rtable[ridx].mask == 0) {
@@ -346,6 +348,7 @@ SetRoutingTable()
 		
 		CONFIG.rtable[ridx].mask = CONFIG.eths[i].netmask;
 		CONFIG.rtable[ridx].masked = CONFIG.rtable[ridx].daddr;
+		printf("SetRoutingTable: CONFIG.rtable[ridx].nif = %d", CONFIG.eths[ridx].ifindex);
 		CONFIG.rtable[ridx].nif = CONFIG.eths[ridx].ifindex;
 	}
 
