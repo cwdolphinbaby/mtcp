@@ -170,25 +170,25 @@ MPCreate(char *name, int chunk_size, size_t total_size)
 				MEMPOOL_F_NO_SPREAD);
 
 	if (mp == NULL) {
-		printf("name: %s\n", name);
-		printf("items: %lu\n", items);
-		printf("total_size: %ld\n", total_size);
-		printf("chunk_size: %d\n", chunk_size);
-		printf("sz: %lu\n", sz);
-		printf("rte_socket_id: %d\n", rte_socket_id());
-		printf("mp is NULL\n");
+		// printf("name: %s\n", name);
+		// printf("items: %lu\n", items);
+		// printf("total_size: %ld\n", total_size);
+		// printf("chunk_size: %d\n", chunk_size);
+		// printf("sz: %lu\n", sz);
+		// printf("rte_socket_id: %d\n", rte_socket_id());
+		// printf("mp is NULL\n");
 		TRACE_ERROR("Can't allocate memory for mempool!\n");
 		exit(EXIT_FAILURE);
 	} else {
-		printf("===================================\n");
-		printf("name: %s\n", name);
-                printf("items: %lu\n", items);
-                printf("total_size: %ld\n", total_size);
-                printf("chunk_size: %d\n", chunk_size);
-                printf("sz: %lu\n", sz);
-                printf("rte_socket_id: %d\n", rte_socket_id());
-                printf("mp allocation is SUCCESSFUL\n");
-		printf("===================================\n");
+		// printf("===================================\n");
+		// printf("name: %s\n", name);
+               // printf("items: %lu\n", items);
+               // printf("total_size: %ld\n", total_size);
+               // printf("chunk_size: %d\n", chunk_size);
+               // printf("sz: %lu\n", sz);
+               // printf("rte_socket_id: %d\n", rte_socket_id());
+               // printf("mp allocation is SUCCESSFUL\n");
+		// printf("===================================\n");
 	}
 
 	return mp;

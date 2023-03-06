@@ -12,16 +12,16 @@ GetOutputInterface(uint32_t daddr, uint8_t *is_external)
 	int i;
 	int prefix = 0;
 	
-	printf("CONFIG.routes = %d\n", CONFIG.routes);
+	// printf("CONFIG.routes = %d\n", CONFIG.routes);
 	*is_external = 0;
 	/* Longest prefix matching */
 	for (i = 0; i < CONFIG.routes; i++) {
-		printf("daddr = %d\n", daddr);
-		printf("rtable[i].mask = %d\n", CONFIG.rtable[i].mask);
-		printf("daddr & mask = %d\n", daddr & CONFIG.rtable[i].mask);
-		printf("rtable[i].masked = %d\n", CONFIG.rtable[i].masked);
-		printf("rtable[i].prefix = %d\n", CONFIG.rtable[i].prefix);
-		printf("constant prefix = %d\n", prefix);
+		// printf("daddr = %d\n", daddr);
+		// printf("rtable[i].mask = %d\n", CONFIG.rtable[i].mask);
+		// printf("daddr & mask = %d\n", daddr & CONFIG.rtable[i].mask);
+		// printf("rtable[i].masked = %d\n", CONFIG.rtable[i].masked);
+		// printf("rtable[i].prefix = %d\n", CONFIG.rtable[i].prefix);
+		// printf("constant prefix = %d\n", prefix);
 		//nif = CONFIG.rtable[i].nif;
 		//prefix = CONFIG.rtable[i].prefix;
 		//printf("IGNORED IF LOOP\n");

@@ -178,7 +178,7 @@ int SetNetEnv(char *dev_name_list, char *port_stat_list)
 
 	TRACE_CONFIG("Loading interface setting\n");
 
-	printf("dev_name_list = %s\n", dev_name_list);
+	// printf("dev_name_list = %s\n", dev_name_list);
 
 	CONFIG.eths = (struct eth_table *)
 			calloc(MAX_DEVICES, sizeof(struct eth_table));
@@ -188,7 +188,7 @@ int SetNetEnv(char *dev_name_list, char *port_stat_list)
 		exit(EXIT_FAILURE);
 	}
 
-	// printf("current_iomodule_func = %s\n", current_iomodule_func);
+	//// printf("current_iomodule_func = %s\n", current_iomodule_func);
 
 	if (current_iomodule_func == &ps_module_func)
 	{
@@ -202,7 +202,7 @@ int SetNetEnv(char *dev_name_list, char *port_stat_list)
 			perror("ps_list_devices");
 			exit(EXIT_FAILURE);
 		}
-		printf("NUM DEVICES = %d\n", num_devices);
+		// printf("NUM DEVICES = %d\n", num_devices);
 
 		/* Create socket */
 		int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
@@ -216,7 +216,7 @@ int SetNetEnv(char *dev_name_list, char *port_stat_list)
 		for (i = 0; i < num_devices; i++)
 		{
 			strcpy(ifr.ifr_name, devices[i].name);
-			printf("DEVICE NAME = %s\n", devices[i].name);
+			// printf("DEVICE NAME = %s\n", devices[i].name);
 
 			/* getting interface information */
 			if (ioctl(sock, SIOCGIFFLAGS, &ifr) == 0)
@@ -286,7 +286,7 @@ int SetNetEnv(char *dev_name_list, char *port_stat_list)
 	}
 	else if (current_iomodule_func == &dpdk_module_func)
 	{
-		printf("INSIDE DPDK MODULE FUNC\n");
+		// printf("INSIDE DPDK MODULE FUNC\n");
 #ifndef DISABLE_DPDK
 		int cpu = CONFIG.num_cores;
 		mpz_t _cpumask;
@@ -400,7 +400,7 @@ int SetNetEnv(char *dev_name_list, char *port_stat_list)
 			TRACE_ERROR("No Ethernet port!\n");
 			exit(EXIT_FAILURE);
 		}
-		printf("DPDK: num_devices = %d\n", num_devices);
+		// printf("DPDK: num_devices = %d\n", num_devices);
 
 		/* get mac addr entries of 'detected' dpdk ports */
 		for (ret = 0; ret < num_devices; ret++)
@@ -421,17 +421,17 @@ int SetNetEnv(char *dev_name_list, char *port_stat_list)
 		iter_if = ifap;
 		do
 		{
-			printf("DPDK: ifr_name = %s\n", iter_if->ifa_name);
+			// printf("DPDK: ifr_name = %s\n", iter_if->ifa_name);
 			if (!strcmp(iter_if->ifa_name, "enp37s0f0") && iter_if->ifa_addr)
-				printf("1\n");
+				// printf("1\n");
 			if (!strcmp(iter_if->ifa_name, "enp37s0f0") && iter_if->ifa_addr->sa_family == AF_INET)
-				printf("2\n");
+				// printf("2\n");
 			if (!strcmp(iter_if->ifa_name, "enp37s0f0") && !set_all_inf)
-				printf("3\n");
+				// printf("3\n");
 			if (!strcmp(iter_if->ifa_name, "enp37s0f0") && (seek = strstr(dev_name_list, iter_if->ifa_name)) != NULL)
-				printf("4\n");
+				// printf("4\n");
 			if (!strcmp(iter_if->ifa_name, "enp37s0f0") && *(seek + strlen(iter_if->ifa_name)) != ':')
-				printf("5\n");
+				// printf("5\n");
 
 			if (iter_if->ifa_addr && iter_if->ifa_addr->sa_family == AF_INET &&
 					!set_all_inf &&
@@ -439,7 +439,7 @@ int SetNetEnv(char *dev_name_list, char *port_stat_list)
 					/* check if the interface was not aliased */
 					*(seek + strlen(iter_if->ifa_name)) == ':')
 			{
-				printf("IN THE IF - io_module line 435\n");
+				// printf("IN THE IF - io_module line 435\n");
 				struct ifreq ifr;
 
 				/* Setting informations */

@@ -217,7 +217,7 @@ CreateConnection(thread_context_t ctx)
   ctx->started++;
   ctx->pending++;
   ctx->stat.connects++;
-  printf("creating MTCP_EPOLLIN with sockid = %d!!!\n", sockid);
+  // printf("creating MTCP_EPOLLIN with sockid = %d!!!\n", sockid);
   ev.events = MTCP_EPOLLIN;
   ev.data.sockid = sockid;
   mtcp_epoll_ctl(mctx, ctx->ep, MTCP_EPOLL_CTL_ADD, sockid, &ev);
@@ -367,7 +367,7 @@ HandleReadEvent(thread_context_t ctx, int sockid, struct wget_vars *wv)
   {
     // printf("HandleReadEvent ITERATION = %d\n", i);
     rd = mtcp_read(mctx, sockid, buf, BUF_SIZE);
-    printf("mtcp_read with iter = %d, rd = %d\n", i, rd);
+    // printf("mtcp_read with iter = %d, rd = %d\n", i, rd);
     if (rd > 0) {
       ctx->stat.reads += rd;
       
@@ -728,7 +728,7 @@ RunWgetMain(void *arg)
     //   }
     // }
 
-    printf("DONE CREATING CONNECTION\n");
+    // printf("DONE CREATING CONNECTION\n");
 
     if (1 < 0) {
       PrintStats();
@@ -858,7 +858,7 @@ RunWgetMain(void *arg)
       mtcp_epoll_ctl(mctx, ep, MTCP_EPOLL_CTL_ADD, sockid, &ev);
       TRACE_APP("Socket %d registered.\n", c);
 
-      printf("MTCP_EPOLLIN\n");
+      // printf("MTCP_EPOLLIN\n");
       HandleReadEvent(ctx, events[i].data.sockid, &wvars[events[i].data.sockid]);
 
 
@@ -1033,7 +1033,7 @@ int main(int argc, char **argv)
   // flow_remainder_cnt = total_flows % core_limit;
   for (i = ((process_cpu == -1) ? 0 : process_cpu); i < core_limit; i++)
   {
-    printf("START !!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@HEYYYYYYYYYYYY CORE = %d\n", i);
+    // printf("START !!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@HEYYYYYYYYYYYY CORE = %d\n", i);
     cores[i] = i;
     done[i] = FALSE;
     flows[i] = flow_per_thread;
@@ -1055,7 +1055,7 @@ int main(int argc, char **argv)
     if (process_cpu != -1)
       break;
 
-    printf("END !!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@HEYYYYYYYYYYYY CORE = %d\n", i);
+    // printf("END !!!!!!!!!!!!!!!!@@@@@@@@@@@@@@@@HEYYYYYYYYYYYY CORE = %d\n", i);
   }
 
   for (i = ((process_cpu == -1) ? 0 : process_cpu); i < core_limit; i++)

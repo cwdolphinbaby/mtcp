@@ -460,7 +460,7 @@ wait:
 	/* wait until event occurs */
 	while (eq->num_events == 0 && eq_shadow->num_events == 0 && timeout != 0)
 	{
-		// printf("busy loop\n");
+		//// printf("busy loop\n");
 
 #if INTR_SLEEPING_MTCP
 		/* signal to mtcp thread if it is sleeping */

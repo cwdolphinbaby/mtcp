@@ -708,7 +708,7 @@ dpdk_load_module(void)
 			port_conf.rx_adv_conf.rss_conf.rss_hf &= dev_info[portid].flow_type_rss_offloads;
 #endif
 			/* init port */
-			printf("Initializing port %u... ", (unsigned) portid);
+			// printf("Initializing port %u... ", (unsigned) portid);
 			fflush(stdout);
 			if (!strncmp(dev_info[portid].driver_name, "net_mlx", 7))
 				port_conf.rx_adv_conf.rss_conf.rss_key_len = 40;
@@ -751,7 +751,7 @@ dpdk_load_module(void)
 				rte_exit(EXIT_FAILURE, "rte_eth_dev_start:err=%d, port=%u\n",
 					 ret, (unsigned) portid);
 
-			printf("done: \n");
+			// printf("done: \n");
 			rte_eth_promiscuous_enable(portid);
 
                         /* retrieve current flow control settings per port */
@@ -768,7 +768,7 @@ dpdk_load_module(void)
                                          ret);
 
 #ifdef DEBUG
-			printf("Port %u, MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
+			// printf("Port %u, MAC address: %02X:%02X:%02X:%02X:%02X:%02X\n\n",
 			       (unsigned) portid,
 			       ports_eth_addr[portid].addr_bytes[0],
 			       ports_eth_addr[portid].addr_bytes[1],

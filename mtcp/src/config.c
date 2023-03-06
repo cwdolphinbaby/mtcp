@@ -146,7 +146,7 @@ EnrollRouteTableEntry(char *optstr)
 				continue;
 
 			ifidx = devices[i].ifindex;
-			printf("SET ifidx = %d\n", ifidx);
+			// printf("SET ifidx = %d\n", ifidx);
 			break;
 		}
 		if (ifidx == -1)
@@ -354,7 +354,7 @@ int SetRoutingTable()
 	if (!CONFIG.rtable)
 		exit(EXIT_FAILURE);
 
-	printf("INSIDE SetRoutingTable()\n");
+	// printf("INSIDE SetRoutingTable()\n");
 
 	/* set default routing table */
 	for (i = 0; i < CONFIG.eths_num; i++)
@@ -371,10 +371,10 @@ int SetRoutingTable()
 		}
 		CONFIG.rtable[ridx].prefix++;
 
-		printf("FROM config.c: CONFIG.eths[i].netmask = %d\n", CONFIG.eths[i].netmask);
-		printf("FROM config.c: CONFIG.rtable[ridx].daddr = %d\n", CONFIG.rtable[ridx].daddr);
-		printf("FROM config.c: CONFIG.eths[ridx].ifindex = %d\n", CONFIG.eths[ridx].ifindex);
-		printf("FROM config.c: CONFIG.eths[i].ifindex = %d\n", CONFIG.eths[i].ifindex);
+		// printf("FROM config.c: CONFIG.eths[i].netmask = %d\n", CONFIG.eths[i].netmask);
+		// printf("FROM config.c: CONFIG.rtable[ridx].daddr = %d\n", CONFIG.rtable[ridx].daddr);
+		// printf("FROM config.c: CONFIG.eths[ridx].ifindex = %d\n", CONFIG.eths[ridx].ifindex);
+		// printf("FROM config.c: CONFIG.eths[i].ifindex = %d\n", CONFIG.eths[i].ifindex);
 
 		CONFIG.rtable[ridx].mask = CONFIG.eths[i].netmask;
 		CONFIG.rtable[ridx].masked = CONFIG.rtable[ridx].daddr;

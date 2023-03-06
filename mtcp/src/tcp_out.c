@@ -290,7 +290,7 @@ SendTCPPacket(struct mtcp_manager *mtcp, tcp_stream *cur_stream,
 	if (flags & TCP_FLAG_ACK) {
 		tcph->ack = TRUE;
 		tcph->ack_seq = htonl(cur_stream->rcv_nxt);
-		printf("tcph->ack_seq = %u\n", cur_stream->rcv_nxt);
+		// printf("tcph->ack_seq = %u\n", cur_stream->rcv_nxt);
 		cur_stream->sndvar->ts_lastack_sent = cur_ts;
 		cur_stream->last_active_ts = cur_ts;
 		UpdateTimeoutList(mtcp, cur_stream);
@@ -552,7 +552,7 @@ FlushTCPSendingBuffer(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_
 							sndvar->peer_wnd, seq - sndvar->snd_una);
 #endif
 				if (!wack_sent && TS_TO_MSEC(cur_ts - sndvar->ts_lastack_sent) > 500) {
-					printf("TRACING EnqueueACK: INSIDE FlushTCPSendingBuffer in tcp_out\n");
+					// printf("TRACING EnqueueACK: INSIDE FlushTCPSendingBuffer in tcp_out\n");
 					EnqueueACK(mtcp, cur_stream, cur_ts, ACK_OPT_WACK);
 				} else
 					wack_sent = 1;
@@ -894,7 +894,7 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 
 			if (to_ack) {
 				/* send the queued ack packets */
-				printf("Trying to send the queued ack packets in tcp_out\n");
+				// printf("Trying to send the queued ack packets in tcp_out\n");
 				while (cur_stream->sndvar->ack_cnt > 0) {
 					ret = SendTCPPacket(mtcp, cur_stream, 
 							cur_ts, TCP_FLAG_ACK, NULL, 0);
@@ -902,7 +902,7 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 						/* since there is no available write buffer, break */
 						break;
 					}
-					printf("Updating cur_stream->sndvar->ack_cnt--\n");
+					// printf("Updating cur_stream->sndvar->ack_cnt--\n");
 					cur_stream->sndvar->ack_cnt--;
 				}
 
@@ -920,7 +920,7 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 				if (!(cur_stream->sndvar->ack_cnt || cur_stream->sndvar->is_wack)) {
 					cur_stream->sndvar->on_ack_list = FALSE;
 					TAILQ_REMOVE(&sender->ack_list, cur_stream, sndvar->ack_link);
-					printf("Updating sender->ack_list_cnt-- (1)\n");
+					// printf("Updating sender->ack_list_cnt-- (1)\n");
 					sender->ack_list_cnt--;
 				}
 			} else {
@@ -928,7 +928,7 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 				cur_stream->sndvar->ack_cnt = 0;
 				cur_stream->sndvar->is_wack = 0;
 				TAILQ_REMOVE(&sender->ack_list, cur_stream, sndvar->ack_link);
-				printf("Updating sender->ack_list_cnt-- (2)\n");
+				// printf("Updating sender->ack_list_cnt-- (2)\n");
 				sender->ack_list_cnt--;
 			}
 
@@ -941,7 +941,7 @@ WriteTCPACKList(mtcp_manager_t mtcp,
 		} else {
 			TRACE_ERROR("Stream %d: not on ack list.\n", cur_stream->id);
 			TAILQ_REMOVE(&sender->ack_list, cur_stream, sndvar->ack_link);
-			printf("Updating sender->ack_list_cnt-- (3)\n");
+			// printf("Updating sender->ack_list_cnt-- (3)\n");
 			sender->ack_list_cnt--;
 #ifdef DUMP_STREAM
 			thread_printf(mtcp, mtcp->log_fp, 
@@ -1077,7 +1077,7 @@ RemoveFromACKList(mtcp_manager_t mtcp, tcp_stream *cur_stream)
 	if (cur_stream->sndvar->on_ack_list) {
 		cur_stream->sndvar->on_ack_list = FALSE;
 		TAILQ_REMOVE(&sender->ack_list, cur_stream, sndvar->ack_link);
-		printf("Updating sender->ack_list_cnt-- from RemoveFromACKList\n");
+		// printf("Updating sender->ack_list_cnt-- from RemoveFromACKList\n");
 		sender->ack_list_cnt--;
 	}
 }
@@ -1086,7 +1086,7 @@ inline void
 EnqueueACK(mtcp_manager_t mtcp, 
 		tcp_stream *cur_stream, uint32_t cur_ts, uint8_t opt)
 {
-	printf("CURRENTLY in EnqueueACK!!!\n");
+	// printf("CURRENTLY in EnqueueACK!!!\n");
 	if (!(cur_stream->state == TCP_ST_ESTABLISHED || 
 			cur_stream->state == TCP_ST_CLOSE_WAIT || 
 			cur_stream->state == TCP_ST_FIN_WAIT_1 || 

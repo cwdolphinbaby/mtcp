@@ -1178,13 +1178,13 @@ mtcp_recv(mctx_t mctx, int sockid, char *buf, size_t len, int flags)
 	}
 	
 	socket = &mtcp->smap[sockid];
-	// printf("socket->socktype = %d\n", socket->socktype);
-  // printf("MTCP_SOCK_UNUSED = %d\n", MTCP_SOCK_UNUSED);
-	// printf("MTCP_SOCK_STREAM = %d\n", MTCP_SOCK_STREAM);
-	// printf("MTCP_SOCK_PROXY = %d\n", MTCP_SOCK_PROXY);
-	// printf("MTCP_SOCK_LISTENER = %d\n", MTCP_SOCK_LISTENER);
-	// printf("MTCP_SOCK_EPOLL = %d\n", MTCP_SOCK_EPOLL);
-	// printf("MTCP_SOCK_PIPE = %d\n", MTCP_SOCK_PIPE);
+	//// printf("socket->socktype = %d\n", socket->socktype);
+  //// printf("MTCP_SOCK_UNUSED = %d\n", MTCP_SOCK_UNUSED);
+	//// printf("MTCP_SOCK_STREAM = %d\n", MTCP_SOCK_STREAM);
+	//// printf("MTCP_SOCK_PROXY = %d\n", MTCP_SOCK_PROXY);
+	//// printf("MTCP_SOCK_LISTENER = %d\n", MTCP_SOCK_LISTENER);
+	//// printf("MTCP_SOCK_EPOLL = %d\n", MTCP_SOCK_EPOLL);
+	//// printf("MTCP_SOCK_PIPE = %d\n", MTCP_SOCK_PIPE);
 
 	if (socket->socktype == MTCP_SOCK_UNUSED) {
 		TRACE_API("Invalid socket id: %d\n", sockid);
@@ -1193,7 +1193,7 @@ mtcp_recv(mctx_t mctx, int sockid, char *buf, size_t len, int flags)
 	}
 	
 	if (socket->socktype == MTCP_SOCK_PIPE) {
-		printf("PIPEREAD!!!");
+		// printf("PIPEREAD!!!");
 		return PipeRead(mctx, sockid, buf, len);
 	}
 	
@@ -1225,7 +1225,7 @@ mtcp_recv(mctx_t mctx, int sockid, char *buf, size_t len, int flags)
 	
 	/* return EAGAIN if no receive buffer */
 	if (socket->opts & MTCP_NONBLOCK) {
-		printf("rcvvar->rcvbuf->merged_len = %d\n", rcvvar->rcvbuf->merged_len);
+		// printf("rcvvar->rcvbuf->merged_len = %d\n", rcvvar->rcvbuf->merged_len);
 
 		if (!rcvvar->rcvbuf || rcvvar->rcvbuf->merged_len == 0) {
 			errno = EAGAIN;
@@ -1250,9 +1250,9 @@ mtcp_recv(mctx_t mctx, int sockid, char *buf, size_t len, int flags)
 	switch (flags) {
 	case 0:
 		// cur_stream->rcvvar->rcvbuf->merged_len -= len;
-		// printf("MERGED_LEN before calling CopyToUser = %d\n", cur_stream->rcvvar->rcvbuf->merged_len);
+		//// printf("MERGED_LEN before calling CopyToUser = %d\n", cur_stream->rcvvar->rcvbuf->merged_len);
 		ret = CopyToUser(mtcp, cur_stream, buf, len);
-		// printf("MERGED_LEN after calling CopyToUser = %d\n", cur_stream->rcvvar->rcvbuf->merged_len);
+		//// printf("MERGED_LEN after calling CopyToUser = %d\n", cur_stream->rcvvar->rcvbuf->merged_len);
 		break;
 	case MSG_PEEK:
 		ret = PeekForUser(mtcp, cur_stream, buf, len);

@@ -118,7 +118,7 @@ ValidateSequence(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts,
 			/* if there is no timestamp */
 			/* TODO: implement here */
 			TRACE_DBG("No timestamp found.\n");
-			printf("No timestamp found.\n");
+			// printf("No timestamp found.\n");
 			return FALSE;
 		}
 
@@ -130,7 +130,7 @@ ValidateSequence(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts,
 					"seq: %u, ts_val: %u, prev: %u\n", 
 					seq, ts.ts_val, cur_stream->rcvvar->ts_recent);
 			EnqueueACK(mtcp, cur_stream, cur_ts, ACK_OPT_NOW);
-			printf("PAWS Detect wrong timestamp.\n");
+			// printf("PAWS Detect wrong timestamp.\n");
 			return FALSE;
 		} else {
 			/* valid timestamp */
@@ -148,17 +148,17 @@ ValidateSequence(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts,
 	}
 
 	/* TCP sequence validation */
-	printf("seq = %d\n", seq);
-	printf("payloadlen = %d\n", payloadlen);
-	printf("seq + payloadlen = %d\n", seq + payloadlen);
-	printf("cur_stream->rcv_nxt = %d\n", cur_stream->rcv_nxt);
-	printf("cur_stream->rcvvar->rcv_wnd = %d\n", cur_stream->rcvvar->rcv_wnd);
+	// printf("seq = %d\n", seq);
+	// printf("payloadlen = %d\n", payloadlen);
+	// printf("seq + payloadlen = %d\n", seq + payloadlen);
+	// printf("cur_stream->rcv_nxt = %d\n", cur_stream->rcv_nxt);
+	// printf("cur_stream->rcvvar->rcv_wnd = %d\n", cur_stream->rcvvar->rcv_wnd);
 	if (!TCP_SEQ_BETWEEN(seq + payloadlen, cur_stream->rcv_nxt, 
 				cur_stream->rcv_nxt + cur_stream->rcvvar->rcv_wnd)) {
 
 		/* if RST bit is set, ignore the segment */
 		if (tcph->rst) {
-			printf("if RST bit is set, ignore the segment\n");
+			// printf("if RST bit is set, ignore the segment\n");
 			return FALSE;
 		}
 
@@ -170,7 +170,7 @@ ValidateSequence(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts,
 						seq, cur_stream->rcvvar->rcv_wnd);
 #endif
 				EnqueueACK(mtcp, cur_stream, cur_ts, ACK_OPT_AGGREGATE);
-				printf("check if it is to get window advertisement \n");
+				// printf("check if it is to get window advertisement \n");
 				return FALSE;
 
 			}
@@ -188,7 +188,7 @@ ValidateSequence(mtcp_manager_t mtcp, tcp_stream *cur_stream, uint32_t cur_ts,
 			}
 			AddtoControlList(mtcp, cur_stream, cur_ts);
 		}
-		printf("LAST FALSE\n");
+		// printf("LAST FALSE\n");
 		return FALSE;
 	}
 
@@ -613,7 +613,7 @@ static inline int
 ProcessTCPPayload(mtcp_manager_t mtcp, tcp_stream *cur_stream, 
 		uint32_t cur_ts, uint8_t *payload, uint32_t seq, int payloadlen)
 {
-	printf("Inside ProcessTCPPayload!!\n");
+	// printf("Inside ProcessTCPPayload!!\n");
 	struct tcp_recv_vars *rcvvar = cur_stream->rcvvar;
 	uint32_t prev_rcv_nxt;
 	int ret;
@@ -661,11 +661,11 @@ ProcessTCPPayload(mtcp_manager_t mtcp, tcp_stream *cur_stream,
 		// RBRemove(mtcp->rbm_rcv, 
 		// 		rcvvar->rcvbuf, rcvvar->rcvbuf->merged_len, AT_MTCP);
 	}
-	printf("Updating cur_stream->rcv_nxt in ProcessTCPPayload: before update cur_stream->rcv_nxt = %d\n", cur_stream->rcv_nxt);
+	// printf("Updating cur_stream->rcv_nxt in ProcessTCPPayload: before update cur_stream->rcv_nxt = %d\n", cur_stream->rcv_nxt);
 	cur_stream->rcv_nxt = rcvvar->rcvbuf->head_seq + rcvvar->rcvbuf->merged_len;
-	printf("rcvvar->rcvbuf->head_seq = %d\n", rcvvar->rcvbuf->head_seq);
-	printf("rcvvar->rcvbuf->merged_len = %d\n", rcvvar->rcvbuf->merged_len);
-	printf("Updating cur_stream->rcv_nxt in ProcessTCPPayload: after update cur_stream->rcv_nxt = %d\n", cur_stream->rcv_nxt);
+	// printf("rcvvar->rcvbuf->head_seq = %d\n", rcvvar->rcvbuf->head_seq);
+	// printf("rcvvar->rcvbuf->merged_len = %d\n", rcvvar->rcvbuf->merged_len);
+	// printf("Updating cur_stream->rcv_nxt in ProcessTCPPayload: after update cur_stream->rcv_nxt = %d\n", cur_stream->rcv_nxt);
 	rcvvar->rcv_wnd = rcvvar->rcvbuf->size - rcvvar->rcvbuf->merged_len;
 
 	SBUF_UNLOCK(&rcvvar->read_lock);
@@ -937,10 +937,10 @@ Handle_TCP_ST_ESTABLISHED (mtcp_manager_t mtcp, uint32_t cur_ts,
 		if (ProcessTCPPayload(mtcp, cur_stream, 
 				cur_ts, payload, seq, payloadlen)) {
 			/* if return is TRUE, send ACK */
-			printf("TRACING EnqueueACK: IN Handle_TCP_ST_ESTABLISHED in tcp_in with ACK_OPT_AGGREGATE\n");
+			// printf("TRACING EnqueueACK: IN Handle_TCP_ST_ESTABLISHED in tcp_in with ACK_OPT_AGGREGATE\n");
 			EnqueueACK(mtcp, cur_stream, cur_ts, ACK_OPT_AGGREGATE);
 		} else {
-			printf("TRACING EnqueueACK: IN Handle_TCP_ST_ESTABLISHED in tcp_in with ACK_OPT_NOW\n");
+			// printf("TRACING EnqueueACK: IN Handle_TCP_ST_ESTABLISHED in tcp_in with ACK_OPT_NOW\n");
 			EnqueueACK(mtcp, cur_stream, cur_ts, ACK_OPT_NOW);
 		}
 	}
@@ -964,7 +964,7 @@ Handle_TCP_ST_ESTABLISHED (mtcp_manager_t mtcp, uint32_t cur_ts,
 			/* notify FIN to application */
 			RaiseReadEvent(mtcp, cur_stream);
 		} else {
-			printf("TRACING EnqueueACK: IN Handle_TCP_ST_ESTABLISHED in tcp_in with ACK_OPT_NOW\n");
+			// printf("TRACING EnqueueACK: IN Handle_TCP_ST_ESTABLISHED in tcp_in with ACK_OPT_NOW\n");
 			EnqueueACK(mtcp, cur_stream, cur_ts, ACK_OPT_NOW);
 			return;
 		}
@@ -1095,10 +1095,10 @@ Handle_TCP_ST_FIN_WAIT_1 (mtcp_manager_t mtcp, uint32_t cur_ts,
 		if (ProcessTCPPayload(mtcp, cur_stream, 
 				cur_ts, payload, seq, payloadlen)) {
 			/* if return is TRUE, send ACK */
-			printf("TRACING EnqueueACK: IN Handle_TCP_ST_FIN_WAIT_1 in tcp_in with ACK_OPT_AGGREGATE\n");
+			// printf("TRACING EnqueueACK: IN Handle_TCP_ST_FIN_WAIT_1 in tcp_in with ACK_OPT_AGGREGATE\n");
 			EnqueueACK(mtcp, cur_stream, cur_ts, ACK_OPT_AGGREGATE);
 		} else {
-			printf("TRACING EnqueueACK: IN Handle_TCP_ST_FIN_WAIT_1 in tcp_in with ACK_OPT_NOW\n");
+			// printf("TRACING EnqueueACK: IN Handle_TCP_ST_FIN_WAIT_1 in tcp_in with ACK_OPT_NOW\n");
 			EnqueueACK(mtcp, cur_stream, cur_ts, ACK_OPT_NOW);
 		}
 	}
@@ -1143,10 +1143,10 @@ Handle_TCP_ST_FIN_WAIT_2 (mtcp_manager_t mtcp, uint32_t cur_ts,
 		if (ProcessTCPPayload(mtcp, cur_stream, 
 				cur_ts, payload, seq, payloadlen)) {
 			/* if return is TRUE, send ACK */
-			printf("TRACING EnqueueACK: IN Handle_TCP_ST_FIN_WAIT_2 in tcp_in with ACK_OPT_AGGREGATE\n");
+			// printf("TRACING EnqueueACK: IN Handle_TCP_ST_FIN_WAIT_2 in tcp_in with ACK_OPT_AGGREGATE\n");
 			EnqueueACK(mtcp, cur_stream, cur_ts, ACK_OPT_AGGREGATE);
 		} else {
-			printf("TRACING EnqueueACK: IN Handle_TCP_ST_FIN_WAIT_2 in tcp_in with ACK_OPT_NOW\n");
+			// printf("TRACING EnqueueACK: IN Handle_TCP_ST_FIN_WAIT_2 in tcp_in with ACK_OPT_NOW\n");
 			EnqueueACK(mtcp, cur_stream, cur_ts, ACK_OPT_NOW);
 		}
 	}
@@ -1278,7 +1278,7 @@ ProcessTCPPacket(mtcp_manager_t mtcp,
 		cur_stream = CreateNewFlowHTEntry(mtcp, cur_ts, iph, ip_len, tcph, 
 				seq, ack_seq, payloadlen, window);
 		if (!cur_stream) {
-			printf("not found in flow table\n");
+			// printf("not found in flow table\n");
 			return TRUE;
 		}
 	}
@@ -1288,7 +1288,7 @@ ProcessTCPPacket(mtcp_manager_t mtcp,
 		ret = ValidateSequence(mtcp, cur_stream, 
 				cur_ts, tcph, seq, ack_seq, payloadlen);
 		if (!ret) {
-			printf("unexpected sequence!!\n");
+			// printf("unexpected sequence!!\n");
 			TRACE_DBG("Stream %d: Unexpected sequence: %u, expected: %u\n",
 					cur_stream->id, seq, cur_stream->rcv_nxt);
 #ifdef DBGMSG
@@ -1316,13 +1316,13 @@ ProcessTCPPacket(mtcp_manager_t mtcp,
 	if (tcph->rst) {
 		cur_stream->have_reset = TRUE;
 		if (cur_stream->state > TCP_ST_SYN_SENT) {
-			printf("ProcessRST!!\n");
+			// printf("ProcessRST!!\n");
 			if (ProcessRST(mtcp, cur_stream, ack_seq)) {
 				return TRUE;
 			}
 		}
 	}
-	printf("cur_stream->state = %d\n", cur_stream->state);
+	// printf("cur_stream->state = %d\n", cur_stream->state);
 	switch (cur_stream->state) {
 	case TCP_ST_LISTEN:
 		Handle_TCP_ST_LISTEN(mtcp, cur_ts, cur_stream, tcph);

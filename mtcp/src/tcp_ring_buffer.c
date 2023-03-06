@@ -382,7 +382,7 @@ RBPut(rb_manager_t rbm, struct tcp_ring_buffer* buff,
 	}
 	if (buff->head_seq == buff->fctx->seq) {
 		buff->cum_len += buff->fctx->len - buff->merged_len;
-		printf("merged len = buff->fctx->len = %d\n", buff->fctx->len);
+		// printf("merged len = buff->fctx->len = %d\n", buff->fctx->len);
 		buff->merged_len = buff->fctx->len; // buff->fctx->len * 1000; // merged_len comes from here!!!
 		// buff->merged_len = buff->fctx->len;
 	}
@@ -408,15 +408,15 @@ RBRemove(rb_manager_t rbm, struct tcp_ring_buffer* buff, size_t len, int option)
 	buff->merged_len -= len;
 	buff->last_len -= len;
 
-	// printf("================================\n");
-	// printf("INSIDE RBRemove!!!\n");
-	// printf("buff->head_offset = %d\n", buff->head_offset);
-	// printf("buff->head = %hhn\n", buff->head);
-	// printf("buff->head_seq = %d\n", buff->head_seq);
-	// printf("buff->merged_len = %d\n", buff->merged_len);
-	// printf("buff->last_len = %d\n", buff->last_len);
-	// printf("INSIDE RBRemove!!!\n");
-	// printf("================================\n");
+	//// printf("================================\n");
+	//// printf("INSIDE RBRemove!!!\n");
+	//// printf("buff->head_offset = %d\n", buff->head_offset);
+	//// printf("buff->head = %hhn\n", buff->head);
+	//// printf("buff->head_seq = %d\n", buff->head_seq);
+	//// printf("buff->merged_len = %d\n", buff->merged_len);
+	//// printf("buff->last_len = %d\n", buff->last_len);
+	//// printf("INSIDE RBRemove!!!\n");
+	//// printf("================================\n");
 
 	// modify fragementation chunks
 	if (len == buff->fctx->len)	{
