@@ -382,7 +382,9 @@ RBPut(rb_manager_t rbm, struct tcp_ring_buffer* buff,
 	}
 	if (buff->head_seq == buff->fctx->seq) {
 		buff->cum_len += buff->fctx->len - buff->merged_len;
-		buff->merged_len = 250000; // buff->fctx->len * 1000; // merged_len comes from here!!!
+		printf("merged len = buff->fctx->len = %d\n", buff->fctx->len);
+		buff->merged_len = buff->fctx->len; // buff->fctx->len * 1000; // merged_len comes from here!!!
+		// buff->merged_len = buff->fctx->len;
 	}
 	
 	return len;
